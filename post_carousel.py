@@ -74,7 +74,27 @@ def wait_until_ready(container_id, timeout_s=120):
     raise RuntimeError(f"Container {container_id} belum siap setelah {timeout_s} detik")
 
 
+def tunggu_gambar(urls, batas_detik=180):
+    """Tunggu sampai semua gambar bisa dibuka publik (GitHub kadang butuh beberapa detik setelah di-push)."""
+    mulai = time.time()
+    belum = list(urls)
+    while belum and time.time() - mulai < batas_detik:
+        masih = []
+        for u in belum:
+            try:
+                r = requests.head(u, timeout=20, allow_redirects=True)
+                if r.status_code != 200:
+                    masih.append(u)
+            except Exception:
+                masih.append(u)
+        belum = masih
+        if belum:
+            time.sleep(6)
+    if belum:
+        raise RuntimeError(f"Gambar belum bisa dibuka publik: {belum[0]}")
+
 def post_carousel(image_urls, caption):
+    tunggu_gambar(image_urls)
     children = []
     for url in image_urls:
         child = api_post(
