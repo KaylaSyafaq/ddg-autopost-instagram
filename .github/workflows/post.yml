@@ -1,0 +1,49 @@
+name: Post Instagram carousel
+
+on:
+  schedule:
+    # Jam tayang, dalam UTC. WIB = UTC+7.
+    # "0 3 * * *" = 03:00 UTC = 10:00 WIB. Ubah sesuai kebutuhan.
+    # Catatan: GitHub kadang menunda jadwal beberapa menit.
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Simulasi saja (tidak posting)?"
+        type: choice
+        options: ["true", "false"]
+        default: "true"
+
+permissions:
+  contents: write
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install requests
+
+      - name: Jalankan posting
+        run: python post_carousel.py
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IMAGE_BASE_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/images/
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+
+      - name: Simpan perubahan status di posts.csv
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          git add posts.csv
+          if ! git diff --staged --quiet; then
+            git commit -m "Update status posting"
+            git pull --rebase
+            git push
+          fi
