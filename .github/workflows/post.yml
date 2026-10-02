@@ -13,6 +13,10 @@ on:
         type: choice
         options: ["true", "false"]
         default: "true"
+      tanggal:
+        description: "Opsional: paksa posting carousel bertanggal ini (YYYY-MM-DD). Kosong = hari ini"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -36,6 +40,7 @@ jobs:
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
           IMAGE_BASE_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/images/
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+          POST_DATE: ${{ github.event.inputs.tanggal }}
 
       - name: Simpan perubahan status di posts.csv
         run: |
