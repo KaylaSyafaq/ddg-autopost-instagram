@@ -57,6 +57,18 @@ def siapkan_logo():
     log(f"Logo dipulihkan: {png} ({len(data) // 1024} KB)")
 
 
+def siapkan_foto():
+    """Foto latar milik sendiri: aset/foto/<nama>.b64.txt dipulihkan jadi aset/foto/<nama>.jpg."""
+    folder = ROOT / "aset" / "foto"
+    if not folder.exists():
+        return
+    for b64 in folder.glob("*.b64.txt"):
+        jpg = folder / (b64.name[: -len(".b64.txt")] + ".jpg")
+        if not jpg.exists():
+            jpg.write_bytes(base64.b64decode("".join(b64.read_text().split())))
+            log(f"Foto dipulihkan: {jpg.name}")
+
+
 def cari_chrome():
     for nama in ("google-chrome", "google-chrome-stable", "chromium", "chromium-browser"):
         p = shutil.which(nama)
@@ -82,6 +94,7 @@ def ambil_html(tanggal):
 
 def render(tanggal):
     siapkan_logo()
+    siapkan_foto()
     chrome = cari_chrome()
     html = ambil_html(tanggal)
     out = ROOT / "images" / tanggal
